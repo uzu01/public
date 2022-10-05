@@ -3,6 +3,7 @@ local ScriptFormat = "https://raw.githubusercontent.com/%s/%s/main/%s/%s/script.
 
 local GameTable = {
     [10723695195] = "aes",
+    [10364927844] = "efs",
 }
 
 local IsSupported = GameTable[game.PlaceId] or GameTable[game.GameId]
