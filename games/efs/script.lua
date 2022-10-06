@@ -58,6 +58,18 @@ function GetClosestEnemy()
             Close = v
         end
     end
+
+    for i, v in pairs(workspace.Dungeons:GetChildren()) do
+        for i2, v2 in pairs(v.NPCs:GetChildren()) do
+            local Part = v2:FindFirstChild("HumanoidRootPart")
+            local Mag = GetMagnitude(Part.Position)
+
+            if Part and Mag < Dist then
+                Dist = Mag
+                Close = v2
+            end
+        end
+    end
     return Close
 end
 
