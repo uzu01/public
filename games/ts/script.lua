@@ -122,7 +122,7 @@ function AutoHatch()
             if not Config.AutoHatch then return end
             local Egg = Config.SelectedEgg:split(" |")[1]
 
-            Network:FireServer("OpenCapsules", Egg, 69)
+            Network:FireServer("OpenCapsules", Egg, 3)
         end
     end)
 end
