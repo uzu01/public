@@ -171,7 +171,7 @@ end
 
 function AutoMineUnder()
     while task.wait() and Config.AutoMineUnder do
-        if Player.Character then
+        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             local Hum = Player.Character.HumanoidRootPart
             local Pos1 = IslandPos[Config.SelectedIsland]
             local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
