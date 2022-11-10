@@ -1,3 +1,5 @@
+getgenv().Discord = "GsnfU2ZAcx"
+
 local User, Repo, Folder = "uzu01", "public", "games"
 local ScriptFormat = "https://raw.githubusercontent.com/%s/%s/main/%s/%s/script.lua"
 
