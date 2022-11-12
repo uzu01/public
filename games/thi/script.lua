@@ -210,7 +210,7 @@ function AutoChest()
                     Teleport(Pos)
 
                     task.spawn(function()
-                        ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Config.SelectedIsland, Pos.p, Pos.p)
+                        ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Chest.Parent.Parent.Name, Pos.p, Pos.p)
                     end)
                 until not Chest.Parent or not CanFarm(Chest) or not Config.AutoChest
             end
