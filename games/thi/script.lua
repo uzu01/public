@@ -1,14 +1,12 @@
--- to do; auto mine ores; auto mine collections;
-
 getgenv().Config = {
     SelectedBlocks = {"Weak Sand"},
     SelectedChests = {"Common Chest"},
+	SelectedOres = {"Copper"},
     SelectedIsland = "Main Island",
     SelectedEgg = "Basic Egg | 100",
     SellAt = 10,
     CanSell = false,
     CanRebirth = false,
-    HasChest = false,
 }
 
 local CoreGui = game:GetService("CoreGui")
@@ -22,6 +20,7 @@ local Player = Players.LocalPlayer
 local IslandInfo = require(ReplicatedStorage.Modules.IslandInfo)
 local PetItems = require(ReplicatedStorage.Modules.PetItems)
 local Shorten = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/util/shorten.lua"))()
+local BlacklistedBlocks = {}
 
 local PosTable = {
 	["-X"] = Vector3.new(-1, 0, 0),
@@ -38,6 +37,7 @@ local IslandPos = {
     ["Jungle Island"] = CFrame.new(2254.86, 64, -864),
     ["Frozen Island"] = CFrame.new(700.8, 72.5, 2119.5),
     ["Pirate Island"] = CFrame.new(2189.75, 59.5, 2138.2),
+	["Volcano Island"] = CFrame.new(2193, 57, 638),
 }
 
 local FolderName = "Kai"
@@ -69,6 +69,10 @@ end
 function CanFarm(Block)
     local Sign = workspace.AreaItems[Config.SelectedIsland]:FindFirstChild("Sign")
 
+    if table.find(BlacklistedBlocks, Block.CFrame) then
+        return false
+    end
+    
     if Sign and Sign:FindFirstChild("SignPart") then
         local Time = Sign.SignPart.SurfaceGui.BlockCount.Text:split(":")
         local Min = tonumber(Time[1])
@@ -131,6 +135,20 @@ function GetChests()
     return tbl
 end
 
+function GetOres()
+	local tbl = {}
+	
+	for i, v in pairs(IslandInfo.MaterialBlockSpawnInfo) do
+		table.insert(tbl, "- " .. i .. " -")
+        table.insert(tbl, "")
+        for i2, v2 in pairs(v) do
+            table.insert(tbl, i2)
+        end 
+        table.insert(tbl, "")
+	end
+	return tbl
+end
+
 function GetIslands()
     local tbl = {}
 
@@ -144,6 +162,17 @@ function GetChest()
     for i, v in pairs(workspace.BlockTerrain[Config.SelectedIsland]:GetChildren()) do
         for i2, v2 in pairs(v:GetChildren()) do
             if table.find(Config.SelectedChests, v2.Name) and CanFarm(v2) then
+                return v2
+            end
+        end
+    end
+    return false
+end
+
+function GetOre()
+    for i, v in pairs(workspace.BlockTerrain[Config.SelectedIsland]:GetChildren()) do
+        for i2, v2 in pairs(v:GetChildren()) do
+            if table.find(Config.SelectedOres, v2.Name) and CanFarm(v2) then
                 return v2
             end
         end
@@ -204,7 +233,6 @@ function AutoChest()
             end     
 
             if Chest and CanFarm(Chest) then
-                Config.HasChest = true
                 repeat task.wait()
                     local Pos = Chest.CFrame
                     Teleport(Pos)
@@ -215,7 +243,43 @@ function AutoChest()
                 until not Chest.Parent or not CanFarm(Chest) or not Config.AutoChest
             end
 
-            Config.HasChest = false
+            for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
+                v.CFrame = Hum.CFrame
+            end
+        end
+    end
+end
+
+function AutoOre()
+    while task.wait(.1) and Config.AutoOre do
+        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local Ore = GetOre()
+            local Hum = Player.Character.HumanoidRootPart
+
+            if not Ore and not Config.CanRebirth and not Config.CanSell then
+                local Pos1 = IslandPos[Config.SelectedIsland]
+                local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
+
+                if Pos2 ~= Hum.CFrame then
+                    Teleport(Pos2)
+                end
+
+                MineUnder()
+            end     
+
+            if Ore and CanFarm(Ore) then
+                repeat task.wait()
+                    local Pos = Ore.CFrame
+                    Teleport(Pos)
+                    task.wait(.3)
+
+                    local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
+                    
+                    if not Result[1] and not table.find(BlacklistedBlocks, Ore.CFrame) then
+                        table.insert(BlacklistedBlocks, Ore.CFrame)
+                    end
+                until not Ore.Parent or not CanFarm(Ore) or not Config.AutoOre
+            end
 
             for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
                 v.CFrame = Hum.CFrame
@@ -308,8 +372,10 @@ function AutoBuyIslands()
 
         for i, v in pairs(IslandInfo.OtherInfo) do
             if not table.find(AreasUnlocked,i) and MyCoins >= v.UnlockCost.Coins and MyTools[v.ToolNeededToUnlock] then
+                Teleport(CFrame.new(506, 65.5, 774.8))
+                task.wait(2)
                 ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
-
+				task.wait(2)		
                 Teleport(IslandPos[i])
                 Options.SelectedIsland:SetValue(i)
             end
@@ -352,6 +418,7 @@ local MiscTab = MiscBox:AddTab("Misc")
 
 FarmingTab:AddToggle("AutoMineUnder", {Text = "Auto Mine (Under)", Default = Config.AutoMineUnder})
 FarmingTab:AddToggle("AutoChest", {Text = "Auto Chest", Default = Config.AutoChest})
+FarmingTab:AddToggle("AutoOre", {Text = "Auto Ore", Default = Config.AutoOre})
 FarmingTab:AddToggle("AutoSell", {Text = "Auto Sell", Default = Config.AutoSell})
 FarmingTab:AddToggle("AutoRebirth", {Text = "Auto Rebirth", Default = Config.AutoRebirth})
 ShopTab:AddToggle("AutoBuyTools", {Text = "Auto Buy Tools", Default = Config.AutoBuyTools})
@@ -360,6 +427,7 @@ ShopTab:AddToggle("AutoBuyIslands", {Text = "Auto Buy Islands", Default = Config
 EggTab:AddToggle("AutoOpenEgg", {Text = "Auto Open Egg", Default = Config.AutoOpenEgg})
 SettingsTab:AddDropdown("SelectedIsland", {Values = GetIslands(), Default = Config.SelectedIsland, Multi = false, Text = "Selected Island"})
 SettingsTab:AddDropdown("SelectedChests", {Values = GetChests(), Default = Config.SelectedChests, Multi = true, Text = "Selected Chests"})
+SettingsTab:AddDropdown("SelectedOres", {Values = GetOres(), Default = Config.SelectedOres, Multi = true, Text = "Selected Ores"})
 SettingsTab:AddDropdown("SelectedEgg", {Values = GetEggs(), Default = Config.SelectedEgg, Multi = false, Text = "Selected Egg"})
 SettingsTab:AddInput("SellAt", {Default = Config.SellAt, Numeric = true, Finished = true, Text = "Sell At", Placeholder = Config.SellAt})
 MiscTab:AddLabel("Keybind"):AddKeyPicker("Keybind", { Default = "LeftControl", NoUI = true, Text = "Keybind"}) 
@@ -377,6 +445,13 @@ Toggles.AutoChest:OnChanged(function()
 
     Save()
     task.spawn(AutoChest)
+end)
+
+Toggles.AutoOre:OnChanged(function()
+    Config.AutoOre = Toggles.AutoOre.Value
+
+    Save()
+    task.spawn(AutoOre)
 end)
 
 Toggles.AutoSell:OnChanged(function()
@@ -445,6 +520,15 @@ Options.SelectedChests:OnChanged(function()
 
     for i, v in pairs(Options.SelectedChests.Value) do
         table.insert(Config.SelectedChests, i)
+    end
+    Save()
+end)
+
+Options.SelectedOres:OnChanged(function()
+    Config.SelectedOres = {}
+
+    for i, v in pairs(Options.SelectedOres.Value) do
+        table.insert(Config.SelectedOres, i)
     end
     Save()
 end)
