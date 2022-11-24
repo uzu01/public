@@ -1,4 +1,4 @@
-getgenv().Discord = "GsnfU2ZAcx"
+getgenv().Discord = "discord.gg/Q8uR3xJs7S"
 
 local User, Repo, Folder = "uzu01", "public", "games"
 local ScriptFormat = "https://raw.githubusercontent.com/%s/%s/main/%s/%s/script.lua"
@@ -9,6 +9,7 @@ local GameTable = {
     [9625096419] = "ts",
     [10404327868] = "tc",
     [10631384212] = "thi",
+    [1659645941] = "i",
 }
 
 local IsSupported = GameTable[game.PlaceId] or GameTable[game.GameId]
