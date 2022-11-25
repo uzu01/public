@@ -320,8 +320,9 @@ end
 
 function AutoRebirth()
     while task.wait() and Config.AutoRebirth do
-        local MyCoins, MyTools = GetData("Coins"), GetData("ToolsOwned")
-        local RebirthCost = 500000000
+        local MyRebirths = GetData("Rebirths")
+        local MyCoins, MyTools, MyRebirths = GetData("Coins"), GetData("ToolsOwned"), GetData("Rebirths")
+        local RebirthCost = require(ReplicatedStorage.Modules.GameItems).RebirthInfo.GetRebirthCost(MyRebirths)
 
         if MyCoins >= RebirthCost and MyTools["Jackhammer"] then  
             Config.CanRebirth = true
