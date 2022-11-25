@@ -21,6 +21,7 @@ local IslandInfo = require(ReplicatedStorage.Modules.IslandInfo)
 local PetItems = require(ReplicatedStorage.Modules.PetItems)
 local Shorten = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/util/shorten.lua"))()
 local BlacklistetOres = {}
+local CanCount = true
 local Count = 0
 
 local PosTable = {
@@ -251,8 +252,6 @@ function AutoChest()
     end
 end
 
-local CanCount = true
-
 function AutoOre()
     while task.wait(.1) and Config.AutoOre do
         if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
@@ -320,7 +319,6 @@ end
 
 function AutoRebirth()
     while task.wait() and Config.AutoRebirth do
-        local MyRebirths = GetData("Rebirths")
         local MyCoins, MyTools, MyRebirths = GetData("Coins"), GetData("ToolsOwned"), GetData("Rebirths")
         local RebirthCost = require(ReplicatedStorage.Modules.GameItems).RebirthInfo.GetRebirthCost(MyRebirths)
 
