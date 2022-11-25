@@ -5,8 +5,12 @@ getgenv().Config = {
     SelectedIsland = "Main Island",
     SelectedEgg = "Basic Egg | 100",
     SellAt = 10,
+}
+
+local Sett = {
     CanSell = false,
     CanRebirth = false,
+    BuyingIsland = false,
 }
 
 local CoreGui = game:GetService("CoreGui")
@@ -71,7 +75,7 @@ end
 function CanFarm(Block)
     local Sign = workspace.AreaItems[Config.SelectedIsland]:FindFirstChild("Sign")
     
-    if table.find(BlacklistetOres, Block.CFrame) then   
+    if table.find(BlacklistetOres, Block.CFrame) then
         return false
     end
 
@@ -98,6 +102,13 @@ function CanFarm(Block)
     end
     return false
 end
+
+function CanFarm2()
+    if Sett.CanSell or Sett.CanRebirth or Sett.BuyingIsland then
+        return false
+    end
+    return true
+end 
 
 function GetEggs()
     local tbl1, tbl2 = {}, {}
@@ -208,7 +219,7 @@ function AutoMineUnder()
             local Pos1 = IslandPos[Config.SelectedIsland]
             local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
     
-            if Pos2 ~= Hum.CFrame and not Config.CanRebirth and not Config.CanSell then
+            if Pos2 ~= Hum.CFrame and CanFarm2() then
                 Teleport(Pos2)
             end
     
@@ -223,7 +234,7 @@ function AutoChest()
             local Chest = GetChest()
             local Hum = Player.Character.HumanoidRootPart
 
-            if not Chest and not Config.CanRebirth and not Config.CanSell then
+            if not Chest and CanFarm2() then
                 local Pos1 = IslandPos[Config.SelectedIsland]
                 local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
 
@@ -234,7 +245,7 @@ function AutoChest()
                 MineUnder()
             end     
 
-            if Chest and CanFarm(Chest) then
+            if Chest and CanFarm(Chest) and CanFarm2() then
                 repeat task.wait()
                     local Pos = Chest.CFrame
                     Teleport(Pos)
@@ -242,7 +253,7 @@ function AutoChest()
                     task.spawn(function()
                         ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Chest.Parent.Parent.Name, Pos.p, Pos.p)
                     end)
-                until not Chest.Parent or not CanFarm(Chest) or not Config.AutoChest
+                until not Chest.Parent or not CanFarm(Chest) or not Config.AutoChest or not CanFarm2()
             end
 
             for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
@@ -269,7 +280,7 @@ function AutoOre()
                 MineUnder()
             end     
 
-            if Ore and CanFarm(Ore) then
+            if Ore and CanFarm(Ore) and CanFarm2() then
                 repeat task.wait()
                     local Pos = Ore.CFrame
                     Teleport(Pos)
@@ -295,7 +306,7 @@ function AutoOre()
                             end	
                         end
 					end)
-                until not Ore.Parent or not CanFarm(Ore) or not Config.AutoOre
+                until not Ore.Parent or not CanFarm(Ore) or not Config.AutoOre or not CanFarm2()
             end
         end
     end
@@ -309,10 +320,10 @@ function AutoSell()
             local Part = workspace.AreaItems[Config.SelectedIsland].Sell
             local OldPos = Player.Character.HumanoidRootPart.CFrame
 
-            Config.CanSell = true; task.wait(.3)
+            Sett.CanSell = true; task.wait(.3)
             Teleport(Part.CFrame); task.wait(.3)
             Teleport(OldPos); task.wait(.3)
-            Config.CanSell = false
+            Sett.CanSell = false
         end
     end
 end
@@ -323,12 +334,17 @@ function AutoRebirth()
         local RebirthCost = require(ReplicatedStorage.Modules.GameItems).RebirthInfo.GetRebirthCost(MyRebirths)
 
         if MyCoins >= RebirthCost and MyTools["Jackhammer"] then  
-            Config.CanRebirth = true
-            Teleport(CFrame.new(753, 78, 2065.5)); task.wait(2)
-            ReplicatedStorage.Events.UIAction:FireServer("Rebirth"); task.wait(2)
-            Options.SelectedIsland:SetValue("Main Island")
-            Config.CanRebirth = false
+            repeat task.wait()
+                Sett.CanRebirth = true
+                Teleport(CFrame.new(753, 78, 2065.5))
+                ReplicatedStorage.Events.UIAction:FireServer("Rebirth")
+            until not Config.AutoRebirth or GetData("Rebirths") == MyRebirths + 1
+
+            if GetData("Rebirths") == MyRebirths + 1 then
+                Options.SelectedIsland:SetValue("Main Island")
+            end
         end
+        Sett.CanRebirth = false
     end
 end
 
@@ -380,12 +396,18 @@ function AutoBuyIslands()
 
         for i, v in pairs(IslandInfo.OtherInfo) do
             if not table.find(AreasUnlocked,i) and MyCoins >= v.UnlockCost.Coins and MyTools[v.ToolNeededToUnlock] then
-                Teleport(CFrame.new(506, 65.5, 774.8)); task.wait(2)
-                ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i); task.wait(2)
-                Teleport(IslandPos[i])
-                Options.SelectedIsland:SetValue(i)
+                repeat task.wait() 
+                    Sett.BuyingIsland = true
+                    Teleport(CFrame.new(506, 65.5, 774.8))
+                    ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
+                until table.find(GetData("AreasUnlocked"), i) or not Config.AutoBuyIslands
+
+                if table.find(GetData("AreasUnlocked"), i) then
+                    Options.SelectedIsland:SetValue(i)
+                end
             end
         end
+        Sett.BuyingIsland = false
     end
 end
 
