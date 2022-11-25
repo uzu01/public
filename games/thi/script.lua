@@ -20,7 +20,8 @@ local Player = Players.LocalPlayer
 local IslandInfo = require(ReplicatedStorage.Modules.IslandInfo)
 local PetItems = require(ReplicatedStorage.Modules.PetItems)
 local Shorten = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/util/shorten.lua"))()
-local BlacklistedBlocks = {}
+local BlacklistetOres = {}
+local Count = 0
 
 local PosTable = {
 	["-X"] = Vector3.new(-1, 0, 0),
@@ -68,11 +69,11 @@ end
 
 function CanFarm(Block)
     local Sign = workspace.AreaItems[Config.SelectedIsland]:FindFirstChild("Sign")
-
-    if table.find(BlacklistedBlocks, Block.CFrame) then
+    
+    if table.find(BlacklistetOres, Block.CFrame) then   
         return false
     end
-    
+
     if Sign and Sign:FindFirstChild("SignPart") then
         local Time = Sign.SignPart.SurfaceGui.BlockCount.Text:split(":")
         local Min = tonumber(Time[1])
@@ -250,6 +251,8 @@ function AutoChest()
     end
 end
 
+local CanCount = true
+
 function AutoOre()
     while task.wait(.1) and Config.AutoOre do
         if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
@@ -271,18 +274,29 @@ function AutoOre()
                 repeat task.wait()
                     local Pos = Ore.CFrame
                     Teleport(Pos)
-                    task.wait(.3)
 
-                    local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
-                    
-                    if not Result[1] and not table.find(BlacklistedBlocks, Ore.CFrame) then
-                        table.insert(BlacklistedBlocks, Ore.CFrame)
-                    end
+					task.spawn(function()
+						ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
+						
+                        if CanCount then
+                            CanCount = false
+
+                            task.wait(1)
+                            Count += 1
+                            CanCount = true
+                            
+                            if Count > 9 then	
+                                local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
+
+                                if not Result[1] then
+                                    table.insert(BlacklistetOres, Ore.CFrame)
+                                    table.foreach(BlacklistetOres, print)
+                                end
+                                Count = 0
+                            end	
+                        end
+					end)
                 until not Ore.Parent or not CanFarm(Ore) or not Config.AutoOre
-            end
-
-            for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
-                v.CFrame = Hum.CFrame
             end
         end
     end
@@ -296,12 +310,9 @@ function AutoSell()
             local Part = workspace.AreaItems[Config.SelectedIsland].Sell
             local OldPos = Player.Character.HumanoidRootPart.CFrame
 
-            Config.CanSell = true
-            task.wait(.3)
-            Teleport(Part.CFrame)
-            task.wait(.3)
-            Teleport(OldPos)
-            task.wait(.3)
+            Config.CanSell = true; task.wait(.3)
+            Teleport(Part.CFrame); task.wait(.3)
+            Teleport(OldPos); task.wait(.3)
             Config.CanSell = false
         end
     end
@@ -314,10 +325,8 @@ function AutoRebirth()
 
         if MyCoins >= RebirthCost and MyTools["Jackhammer"] then  
             Config.CanRebirth = true
-            Teleport(CFrame.new(753, 78, 2065.5))
-            task.wait(2)
-            ReplicatedStorage.Events.UIAction:FireServer("Rebirth")
-            task.wait(2)
+            Teleport(CFrame.new(753, 78, 2065.5)); task.wait(2)
+            ReplicatedStorage.Events.UIAction:FireServer("Rebirth"); task.wait(2)
             Options.SelectedIsland:SetValue("Main Island")
             Config.CanRebirth = false
         end
@@ -372,10 +381,8 @@ function AutoBuyIslands()
 
         for i, v in pairs(IslandInfo.OtherInfo) do
             if not table.find(AreasUnlocked,i) and MyCoins >= v.UnlockCost.Coins and MyTools[v.ToolNeededToUnlock] then
-                Teleport(CFrame.new(506, 65.5, 774.8))
-                task.wait(2)
-                ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
-				task.wait(2)		
+                Teleport(CFrame.new(506, 65.5, 774.8)); task.wait(2)
+                ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i); task.wait(2)
                 Teleport(IslandPos[i])
                 Options.SelectedIsland:SetValue(i)
             end
