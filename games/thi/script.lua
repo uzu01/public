@@ -257,6 +257,7 @@ function AutoChest()
                         ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Chest.Parent.Parent.Name, Pos.p, Pos.p)
                     end)
                 until not Chest.Parent or not CanFarm(Chest) or not Config.AutoChest or not CanFarm2()
+				Teleport(IslandPos[Config.SelectedIsland])
             end
 
             for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
@@ -311,6 +312,7 @@ function AutoOre()
                         end
 					end)
                 until not Ore.Parent or not CanFarm(Ore) or not Config.AutoOre or not CanFarm2()
+				Teleport(IslandPos[Config.SelectedIsland])
             end
         end
     end
