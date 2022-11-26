@@ -538,6 +538,7 @@ for i, v in pairs(game.CoreGui:GetChildren()) do
 end
 
 Load()
+Player.PlayerGui:WaitForChild("Gui", 9e9):WaitForChild("BackpackFull", 9e9).Visible = false
 
 local Linoria = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/ui/linoria"))()
 local Window = Linoria:CreateWindow({Title = "Treasure Hunt Islands | Uzu", Center = true, AutoShow = true})
