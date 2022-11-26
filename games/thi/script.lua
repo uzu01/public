@@ -1,7 +1,7 @@
 getgenv().Config = {
     SelectedBlocks = {"Weak Sand"},
     SelectedChests = {"Common Chest"},
-	SelectedOres = {"Copper"},
+    SelectedOres = {"Copper"},
     SelectedCollections = {"Life Key"},
     SelectedIsland = "Main Island",
     SelectedEgg = "Basic Egg | 100",
@@ -12,7 +12,7 @@ local Sett = {
     CanSell = false,
     CanRebirth = false,
     BuyingIsland = false,
-	IsFarmingChest = false,
+    IsFarmingChest = false,
 }
 
 local CoreGui = game:GetService("CoreGui")
@@ -34,14 +34,13 @@ local CanCount2 = true
 local Count = 0
 local Count2 = 0
 
-
 local PosTable = {
-	["-X"] = Vector3.new(-1, 0, 0),
-	["-Y"] = Vector3.new(0, -1, 0),
-	["-Z"] = Vector3.new(0, 0, -1),
-	["X"] = Vector3.new(1, 0, 0),
-	["Y"] = Vector3.new(0, 1, 0),
-	["Z"] = Vector3.new(0, 0, 1),
+    ["-X"] = Vector3.new(-1, 0, 0),
+    ["-Y"] = Vector3.new(0, -1, 0),
+    ["-Z"] = Vector3.new(0, 0, -1),
+    ["X"] = Vector3.new(1, 0, 0),
+    ["Y"] = Vector3.new(0, 1, 0),
+    ["Z"] = Vector3.new(0, 0, 1),
 }
 
 local IslandPos = {
@@ -50,7 +49,7 @@ local IslandPos = {
     ["Jungle Island"] = CFrame.new(2254.86, 64, -864),
     ["Frozen Island"] = CFrame.new(700.8, 72.5, 2119.5),
     ["Pirate Island"] = CFrame.new(2189.75, 59.5, 2138.2),
-	["Volcano Island"] = CFrame.new(2190.1, 59.5, 634.97),
+    ["Volcano Island"] = CFrame.new(2190.1, 59.5, 634.97),
 }
 
 local FolderName = "Kai"
@@ -156,31 +155,31 @@ function GetChests()
 end
 
 function GetOres()
-	local tbl = {}
-	
-	for i, v in pairs(IslandInfo.MaterialBlockSpawnInfo) do
-		table.insert(tbl, "- " .. i .. " -")
+    local tbl = {}
+
+    for i, v in pairs(IslandInfo.MaterialBlockSpawnInfo) do
+        table.insert(tbl, "- " .. i .. " -")
         table.insert(tbl, "")
         for i2, v2 in pairs(v) do
             table.insert(tbl, i2)
         end 
         table.insert(tbl, "")
-	end
-	return tbl
+    end
+    return tbl
 end
 
 function GetCollections()
     local tbl = {}
-	
-	for i, v in pairs(IslandInfo.Collections) do
-		table.insert(tbl, "- " .. i .. " -")
+
+    for i, v in pairs(IslandInfo.Collections) do
+        table.insert(tbl, "- " .. i .. " -")
         table.insert(tbl, "")
         for i2, v2 in pairs(v.Pieces) do
             table.insert(tbl, v2.Name)
         end 
         table.insert(tbl, "")
-	end
-	return tbl
+    end
+    return tbl
 end
 
 function GetIslands()
@@ -280,120 +279,120 @@ function AutoChest()
             if Chest and CanFarm(Chest) and CanFarm2() then
                 repeat task.wait()
                     local Pos = Chest.CFrame
-					Sett.IsFarmingChest = true
+                    Sett.IsFarmingChest = true
                     Teleport(Pos)
 
                     task.spawn(function()
                         ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Chest.Parent.Parent.Name, Pos.p, Pos.p)
                     end)
                 until not Chest.Parent or not CanFarm(Chest) or not Config.AutoChest or not CanFarm2()
-				Teleport(IslandPos[Config.SelectedIsland])
+                Teleport(IslandPos[Config.SelectedIsland])
             end
 
             for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
                 v.CFrame = Hum.CFrame
             end
-			Sett.IsFarmingChest = false
+            Sett.IsFarmingChest = false
         end
     end
 end
 
 function AutoOre()
     while task.wait(.1) and Config.AutoOre do
-        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            local Ore = GetOre()
-            local Hum = Player.Character.HumanoidRootPart
+    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        local Ore = GetOre()
+        local Hum = Player.Character.HumanoidRootPart
 
-            if not Ore and CanFarm2() then
-                local Pos1 = IslandPos[Config.SelectedIsland]
-                local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
+        if not Ore and CanFarm2() then
+            local Pos1 = IslandPos[Config.SelectedIsland]
+            local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
 
-                if Pos2 ~= Hum.CFrame then
-                    Teleport(Pos2)
-                end
+            if Pos2 ~= Hum.CFrame then
+                Teleport(Pos2)
+            end
 
-                MineUnder()
-            end     
+            MineUnder()
+        end     
 
-            if Ore and CanFarm(Ore) and CanFarm2() then
-                repeat task.wait()
-                    local Pos = Ore.CFrame
-                    Teleport(Pos)
+        if Ore and CanFarm(Ore) and CanFarm2() then
+            repeat task.wait()
+                local Pos = Ore.CFrame
+                Teleport(Pos)
 
-					task.spawn(function()
-						ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
-						
-                        if CanCount then
-                            CanCount = false
+                task.spawn(function()
+                    ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
 
-                            task.wait(1)
-                            Count += 1
-                            CanCount = true
-                            
-                            if Count > 9 then	
-                                local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
+                    if CanCount then
+                        CanCount = false
 
-                                if not Result[1] then
-                                    table.insert(BlacklistedBlocks, Ore.CFrame)
-                                end
-                                Count = 0
-                            end	
-                        end
-					end)
-                until not Ore.Parent or not CanFarm(Ore) or not Config.AutoOre or not CanFarm2()
-				Teleport(IslandPos[Config.SelectedIsland])
+                        task.wait(1)
+                        Count += 1
+                        CanCount = true
+
+                        if Count > 9 then	
+                            local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Ore.Parent.Parent.Name, Pos.p, Pos.p)
+
+                            if not Result[1] then
+                                table.insert(BlacklistedBlocks, Ore.CFrame)
+                            end
+                            Count = 0
+                        end	
+                    end
+                end)
+            until not Ore.Parent or not CanFarm(Ore) or not Config.AutoOre or not CanFarm2()
+            Teleport(IslandPos[Config.SelectedIsland])
             end
         end
     end
 end
 
 function AutoCollection()
-    while task.wait(.1) and Config.AutoCollection do
-        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            local Collection = GetCollection()
-            local Hum = Player.Character.HumanoidRootPart
+     while task.wait(.1) and Config.AutoCollection do
+          if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+               local Collection = GetCollection()
+               local Hum = Player.Character.HumanoidRootPart
 
-            if not Collection and CanFarm2() then
-                local Pos1 = IslandPos[Config.SelectedIsland]
-                local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
+               if not Collection and CanFarm2() then
+                    local Pos1 = IslandPos[Config.SelectedIsland]
+                    local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
 
-                if Pos2 ~= Hum.CFrame then
-                    Teleport(Pos2)
-                end
+                    if Pos2 ~= Hum.CFrame then
+                         Teleport(Pos2)
+                    end
 
-                MineUnder()
-            end     
+                    MineUnder()
+               end
 
-            if Collection and CanFarm(Collection) and CanFarm2() then
-                repeat task.wait()
-                    local Pos = Collection.CFrame
-                    Teleport(Pos)
+               if Collection and CanFarm(Collection) and CanFarm2() then
+                    repeat task.wait()
+                         local Pos = Collection.CFrame
+                         Teleport(Pos)
 
-					task.spawn(function()
-						ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
-						
-                        if CanCount2 then
-                            CanCount2 = false
+                         task.spawn(function()
+                         ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
 
-                            task.wait(1)
-                            Count2 += 1
-                            CanCount2 = true
-                            
-                            if Count2 > 9 then	
-                                local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
+                         if CanCount2 then
+                              CanCount2 = false
 
-                                if not Result[1] then
-                                    table.insert(BlacklistedBlocks, Collection.CFrame)
-                                end
-                                Count2 = 0
-                            end	
-                        end
-					end)
-                until not Collection.Parent or not CanFarm(Collection) or not Config.AutoCollection or not CanFarm2()
-				Teleport(IslandPos[Config.SelectedIsland])
-            end
-        end
-    end
+                              task.wait(1)
+                              Count2 += 1
+                              CanCount2 = true
+
+                              if Count2 > 9 then
+                                   local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
+
+                                   if not Result[1] then
+                                        table.insert(BlacklistedBlocks, Collection.CFrame)
+                                   end
+                                   Count2 = 0
+                              end
+                         end
+                         end)
+                    until not Collection.Parent or not CanFarm(Collection) or not Config.AutoCollection or not CanFarm2()
+                    Teleport(IslandPos[Config.SelectedIsland])
+               end
+          end
+     end
 end
 
 function AutoSell()
@@ -506,22 +505,22 @@ function AutoOpenEgg()
 end
 
 function NoClip()
-	local Char = Player.Character
-	
-	if Char then
-		for i, v in pairs(Char:GetDescendants()) do
-			if v:IsA("BasePart") then
-				v.CanCollide = false
-			end
-		end
-	end
+   local Char = Player.Character
+
+   if Char then
+      for i, v in pairs(Char:GetDescendants()) do
+         if v:IsA("BasePart") then
+            v.CanCollide = false
+         end
+      end
+   end
 end
 
 if THIR then THIR:Disconnect() end
 getgenv().THIR = RunService.Stepped:Connect(function()
-	if Sett.IsFarmingChest then
-		NoClip()
-	end
+    if Sett.IsFarmingChest then
+       NoClip()
+    end
 end)
 
 for i, v in pairs(game.CoreGui:GetChildren()) do
