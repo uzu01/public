@@ -29,6 +29,7 @@ local PetItems = require(ReplicatedStorage.Modules.PetItems)
 local Shorten = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/util/shorten.lua"))()
 
 local BlacklistedBlocks = {}
+local CanDoRebirth = true
 local CanCount = true
 local CanCount2 = true
 local Count = 0
@@ -424,23 +425,21 @@ function AutoRebirth()
         local MyCoins, MyTools, MyRebirths = GetData("Coins"), GetData("ToolsOwned"), GetData("Rebirths")
         local RebirthCost = require(ReplicatedStorage.Modules.GameItems).RebirthInfo.GetRebirthCost(MyRebirths)
 
-        if MyCoins >= RebirthCost and MyTools["Jackhammer"] then  
-            repeat task.wait()
-                Sett.CanRebirth = true
-                Teleport(CFrame.new(753, 78, 2065.5))
-                ReplicatedStorage.Events.UIAction:FireServer("Rebirth")
-            until not Config.AutoRebirth or GetData("Rebirths") == MyRebirths + 1
-
-            if GetData("Rebirths") == MyRebirths + 1 then
-                Options.SelectedIsland:SetValue("Main Island")
-            end
+        if MyCoins >= RebirthCost and MyTools["Jackhammer"] and CanDoRebirth then             
+            CanDoRebirth = false    
+            Teleport(CFrame.new(753, 78, 2065.5))
+            Sett.CanRebirth = true
+            ReplicatedStorage.Events.UIAction:FireServer("Rebirth")
+            task.wait(1)
+            Options.SelectedIsland:SetValue("Main Island")
+            CanDoRebirth = true
         end
         Sett.CanRebirth = false
     end
 end
 
 function AutoBuyTools()
-    while task.wait() and Config.AutoBuyTools do
+    while task.wait(.5) and Config.AutoBuyTools do
         local Tool, Island, Lowest = nil, nil, math.huge
         local MyTools, MyCoins, AreasUnlocked = GetData("ToolsOwned"), GetData("Coins"), GetData("AreasUnlocked")
 
@@ -461,7 +460,7 @@ function AutoBuyTools()
 end
 
 function AutoBuyBackpacks()
-    while task.wait() and Config.AutoBuyBackpacks do
+    while task.wait(.5) and Config.AutoBuyBackpacks do
         local Backpack, Island, Lowest = nil, nil, math.huge
         local MyBackpacks, MyCoins, AreasUnlocked = GetData("BackpacksOwned"), GetData("Coins"), GetData("AreasUnlocked")
 
@@ -482,18 +481,14 @@ function AutoBuyBackpacks()
 end
 
 function AutoBuyIslands()
-    while task.wait() and Config.AutoBuyIslands do
+    while task.wait(.5) and Config.AutoBuyIslands do
         local AreasUnlocked, MyCoins, MyTools = GetData("AreasUnlocked"), GetData("Coins"), GetData("ToolsOwned")
 
         for i, v in pairs(IslandInfo.OtherInfo) do
             if not table.find(AreasUnlocked,i) and MyCoins >= v.UnlockCost.Coins and MyTools[v.ToolNeededToUnlock] then
-                repeat task.wait() 
-                    if not Sett.CanRebirth then
-                        Sett.BuyingIsland = true
-                        Teleport(CFrame.new(506, 65.5, 774.8))
-                        ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
-                    end
-                until table.find(GetData("AreasUnlocked"), i) or not Config.AutoBuyIslands or Sett.CanRebirth
+                Sett.BuyingIsland = true
+                ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
+                task.wait(1)
 
                 if table.find(GetData("AreasUnlocked"), i) then
                     Options.SelectedIsland:SetValue(i)
@@ -544,6 +539,7 @@ for i, v in pairs(game.CoreGui:GetChildren()) do
     end
 end
 
+task.wait(.3)
 Load()
 
 local Linoria = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/ui/linoria"))()
