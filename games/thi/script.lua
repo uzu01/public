@@ -45,7 +45,7 @@ local IslandPos = {
     ["Jungle Island"] = CFrame.new(2254.86, 64, -864),
     ["Frozen Island"] = CFrame.new(700.8, 72.5, 2119.5),
     ["Pirate Island"] = CFrame.new(2189.75, 59.5, 2138.2),
-	["Volcano Island"] = CFrame.new(2189, 59.5, 640),
+	["Volcano Island"] = CFrame.new(2190.1, 59.5, 634.97),
 }
 
 local FolderName = "Kai"
