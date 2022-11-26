@@ -363,7 +363,7 @@ function AutoBuyTools()
             end
         end
     
-        if Tool and Island then
+        if Tool and Island and CanFarm2() then
             ReplicatedStorage.Events.UIAction:FireServer("PurchaseUpgradeShopItem", "Tools", Tool, Island)    
         end
     end
@@ -384,7 +384,7 @@ function AutoBuyBackpacks()
             end
         end
     
-        if Backpack and Island then
+        if Backpack and Island and CanFarm2() then
             ReplicatedStorage.Events.UIAction:FireServer("PurchaseUpgradeShopItem", "Backpacks", Backpack, Island)    
         end
     end
