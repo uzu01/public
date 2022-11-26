@@ -529,6 +529,13 @@ getgenv().THIR = RunService.Stepped:Connect(function()
     if Sett.IsFarmingChest then
        NoClip()
     end
+
+    local Gui = Player.PlayerGui:FindFirstChild("Gui")
+    local Notif = Gui and Gui:FindFirstChild("BackpackFull")
+
+    if Notif and Notif.Visible then
+        Notif.Visible = false
+    end
 end)
 
 for i, v in pairs(game.CoreGui:GetChildren()) do
@@ -538,7 +545,6 @@ for i, v in pairs(game.CoreGui:GetChildren()) do
 end
 
 Load()
-Player.PlayerGui:WaitForChild("Gui", 9e9):WaitForChild("BackpackFull", 9e9).Visible = false
 
 local Linoria = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/ui/linoria"))()
 local Window = Linoria:CreateWindow({Title = "Treasure Hunt Islands | Uzu", Center = true, AutoShow = true})
