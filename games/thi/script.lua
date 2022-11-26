@@ -11,10 +11,12 @@ local Sett = {
     CanSell = false,
     CanRebirth = false,
     BuyingIsland = false,
+	IsFarmingChest = false,
 }
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
@@ -248,6 +250,7 @@ function AutoChest()
             if Chest and CanFarm(Chest) and CanFarm2() then
                 repeat task.wait()
                     local Pos = Chest.CFrame
+					Sett.IsFarmingChest = true
                     Teleport(Pos)
 
                     task.spawn(function()
@@ -259,6 +262,7 @@ function AutoChest()
             for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
                 v.CFrame = Hum.CFrame
             end
+			Sett.IsFarmingChest = false
         end
     end
 end
@@ -418,6 +422,25 @@ function AutoOpenEgg()
         ReplicatedStorage.Events.RequestEggHatch:FireServer(Egg, 3)
     end
 end
+
+function NoClip()
+	local Char = Player.Character
+	
+	if Char then
+		for i, v in pairs(Char:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+	end
+end
+
+if THIR then THIR:Disconnect() end
+getgenv().THIR = RunService.Stepped:Connect(function()
+	if Sett.IsFarmingChest then
+		NoClip()
+	end
+end)
 
 for i, v in pairs(game.CoreGui:GetChildren()) do
     if v.Name == "ScreenGui" then
