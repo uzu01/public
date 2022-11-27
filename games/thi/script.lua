@@ -386,7 +386,7 @@ function AutoRebirth()
 
             Sett.CanRebirth = true
             ReplicatedStorage.Events.UIAction:FireServer("Rebirth")
-            task.wait(1)
+            task.wait(5)
 
             if GetData("Rebirths") == MyRebirths + 1 then
                 Options.SelectedIsland:SetValue("Main Island")
@@ -447,7 +447,7 @@ function AutoBuyIslands()
             if not table.find(AreasUnlocked,i) and MyCoins >= v.UnlockCost.Coins and MyTools[v.ToolNeededToUnlock] then
                 Sett.BuyingIsland = true
                 ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
-                task.wait(1)
+                task.wait(5)
 
                 if table.find(GetData("AreasUnlocked"), i) then
                     Options.SelectedIsland:SetValue(i)
