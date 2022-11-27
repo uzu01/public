@@ -12,6 +12,7 @@ local Sett = {
     CanSell = false,
     CanRebirth = false,
     BuyingIsland = false,
+    HasCollection = false,
     IsFarmingChest = false,
 }
 
@@ -25,8 +26,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Player = Players.LocalPlayer
 local IslandInfo = require(ReplicatedStorage.Modules.IslandInfo)
+local Location = require(game.ReplicatedStorage.Modules.Location)
 local PetItems = require(ReplicatedStorage.Modules.PetItems)
 local SpecialEventInfo = require(ReplicatedStorage.Modules.SpecialEventInfo)
+local GameItems = require(game.ReplicatedStorage.Modules.GameItems)
 local Shorten = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/util/shorten.lua"))()
 
 local BlacklistedBlocks = {}
@@ -112,7 +115,7 @@ function CanFarm(Block)
 end
 
 function CanFarm2()
-    if Sett.CanSell or Sett.CanRebirth or Sett.BuyingIsland then
+    if Sett.CanSell or Sett.CanRebirth or Sett.BuyingIsland or Sett.HasCollection then
         return false
     end
     return true
@@ -181,20 +184,6 @@ function GetOres()
     return tbl
 end
 
-function GetCollections()
-    local tbl = {}
-
-    for i, v in pairs(IslandInfo.Collections) do
-        table.insert(tbl, "- " .. i .. " -")
-        table.insert(tbl, "")
-        for i2, v2 in pairs(v.Pieces) do
-            table.insert(tbl, v2.Name)
-        end 
-        table.insert(tbl, "")
-    end
-    return tbl
-end
-
 function GetIslands()
     local tbl = {}
 
@@ -226,33 +215,13 @@ function GetOre()
     return false
 end
 
-function GetCollection()
-    for i, v in pairs(workspace.BlockTerrain[Config.SelectedIsland]:GetChildren()) do
-        for i2, v2 in pairs(v:GetChildren()) do
-            if table.find(Config.SelectedCollections, v2.Name) and CanFarm(v2) then
-                return v2
-            end
-        end
-    end
-    return false
-end
-
 function MineUnder()
-    local RaycastParams, AreasUnlocked = RaycastParams.new(), GetData("AreasUnlocked")
+    local Island, c, d, e, Block = Location.GetIslandAndBlockBeneath(1,Player)
 
-    RaycastParams.FilterDescendantsInstances = {Player.Character:GetDescendants()}
-    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-
-    local Result = workspace:Raycast(Player.Character.HumanoidRootPart.Position, Vector3.new(0,-99,0), RaycastParams)
-
-    for i, v in pairs(AreasUnlocked) do
-        if Result and Result.Instance:FindFirstAncestor(v) then
-            local Block = Result.Instance
-
-            task.spawn(function()
-                ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(v, Block.Position, Block.Position)
-            end) 
-        end
+    if Island and Block then
+        task.spawn(function()
+            ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Island, Block.Position, Block.Position)
+        end)
     end
 end
 
@@ -366,52 +335,19 @@ end
 function AutoCollection()
     while task.wait(.1) and Config.AutoCollection do
         if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            local Collection = GetCollection()
-            local Hum = Player.Character.HumanoidRootPart
+            for i, v in pairs(workspace.BlockTerrain[Config.SelectedIsland]:GetChildren()) do
+                for i3, v3 in pairs(v:GetChildren()) do
+                    if v3.Name == "???" and CanFarm(v3) then
+                        Sett.HasCollection = true
+                        Teleport(v3.CFrame)
 
-            if not Collection and CanFarm2() then
-                local Pos1 = IslandPos[Config.SelectedIsland]
-                local Pos2 = CFrame.new(Pos1.X, Hum.CFrame.Y, Pos1.Z)
-
-                if Pos2 ~= Hum.CFrame then
-                    Teleport(Pos2)
+                        task.spawn(function()
+                            ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(v3.Parent.Parent.Name, v3.Position, v3.Position)
+                        end)
+                    end
                 end
-
-                MineUnder()
             end
-
-            if Collection and CanFarm(Collection) and CanFarm2() then
-                repeat task.wait()
-                    local Pos = Collection.CFrame
-                    Teleport(Pos)
-
-                    task.spawn(function()
-                        ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
-
-                        if CanCount2 then
-                            CanCount2 = false
-
-                            task.wait(1)
-                            Count2 += 1
-
-                            if Count2 > 9 then
-                                local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
-
-                                if not Result[1] then
-                                    table.insert(BlacklistedBlocks, Collection.CFrame)
-                                end
-                                Count2 = 0
-                            end
-                            CanCount2 = true
-                        end
-                    end)
-                until not Collection.Parent or not CanFarm(Collection) or not Config.AutoCollection or not CanFarm2()
-                Teleport(IslandPos[Config.SelectedIsland])
-            end
-
-            for i, v in pairs(workspace.ParticleHolder.DropHolder:GetChildren()) do
-                v.CFrame = Hum.CFrame
-            end
+            Sett.HasCollection = false
         end
     end
 end
@@ -435,15 +371,26 @@ end
 function AutoRebirth()
     while task.wait() and Config.AutoRebirth do
         local MyCoins, MyTools, MyRebirths = GetData("Coins"), GetData("ToolsOwned"), GetData("Rebirths")
-        local RebirthCost = require(ReplicatedStorage.Modules.GameItems).RebirthInfo.GetRebirthCost(MyRebirths)
-
+        local RebirthCost = GameItems.RebirthInfo.GetRebirthCost(MyRebirths)
+        local RebirthArea = GameItems.RebirthInfo.GetRebirthArea(MyRebirths + 1)
+        local Area = workspace.AreaItems[RebirthArea.IslandName]:FindFirstChild("Rebirth")
+        
         if MyCoins >= RebirthCost and MyTools["Jackhammer"] and CanDoRebirth then             
             CanDoRebirth = false    
-            Teleport(CFrame.new(753, 78, 2065.5))
+            
+            if Area then
+                Teleport(Area.CFrame)
+            else
+                Options.SelectedIsland:SetValue(RebirthArea.IslandName)
+            end
+
             Sett.CanRebirth = true
             ReplicatedStorage.Events.UIAction:FireServer("Rebirth")
             task.wait(1)
-            Options.SelectedIsland:SetValue("Main Island")
+
+            if GetData("Rebirths") == MyRebirths + 1 then
+                Options.SelectedIsland:SetValue("Main Island")
+            end
             CanDoRebirth = true
         end
         Sett.CanRebirth = false
@@ -502,9 +449,7 @@ function AutoBuyIslands()
                 ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
                 task.wait(1)
 
-                if table.find(GetData("AreasUnlocked"), i) then
-                    Options.SelectedIsland:SetValue(i)
-                end
+                Options.SelectedIsland:SetValue(i)
             end
         end
         Sett.BuyingIsland = false
@@ -574,7 +519,7 @@ local MiscTab = MiscBox:AddTab("Misc")
 FarmingTab:AddToggle("AutoMineUnder", {Text = "Auto Mine (Under)", Default = Config.AutoMineUnder})
 FarmingTab:AddToggle("AutoChest", {Text = "Auto Chest", Default = Config.AutoChest})
 FarmingTab:AddToggle("AutoOre", {Text = "Auto Ore", Default = Config.AutoOre})
-FarmingTab:AddToggle("AutoCollection", {Text = "Auto Collection", Default = Config.AutoCollection})
+FarmingTab:AddToggle("AutoCollection", {Text = "Auto Collect `???`", Default = Config.AutoCollection})
 FarmingTab:AddToggle("AutoSell", {Text = "Auto Sell", Default = Config.AutoSell})
 FarmingTab:AddToggle("AutoRebirth", {Text = "Auto Rebirth", Default = Config.AutoRebirth})
 ShopTab:AddToggle("AutoBuyTools", {Text = "Auto Buy Tools", Default = Config.AutoBuyTools})
@@ -584,7 +529,6 @@ EggTab:AddToggle("AutoOpenEgg", {Text = "Auto Open Egg", Default = Config.AutoOp
 SettingsTab:AddDropdown("SelectedIsland", {Values = GetIslands(), Default = Config.SelectedIsland, Multi = false, Text = "Selected Island"})
 SettingsTab:AddDropdown("SelectedChests", {Values = GetChests(), Default = Config.SelectedChests, Multi = true, Text = "Selected Chests"})
 SettingsTab:AddDropdown("SelectedOres", {Values = GetOres(), Default = Config.SelectedOres, Multi = true, Text = "Selected Ores"})
-SettingsTab:AddDropdown("SelectedCollections", {Values = GetCollections(), Default = Config.SelectedCollections, Multi = true, Text = "Selected Collections"})
 SettingsTab:AddDropdown("SelectedEgg", {Values = GetEggs(), Default = Config.SelectedEgg, Multi = false, Text = "Selected Egg"})
 SettingsTab:AddInput("SellAt", {Default = Config.SellAt, Numeric = true, Finished = true, Text = "Sell At", Placeholder = Config.SellAt})
 MiscTab:AddLabel("Keybind"):AddKeyPicker("Keybind", { Default = "LeftControl", NoUI = true, Text = "Keybind"}) 
@@ -693,15 +637,6 @@ Options.SelectedOres:OnChanged(function()
 
     for i, v in pairs(Options.SelectedOres.Value) do
         table.insert(Config.SelectedOres, i)
-    end
-    Save()
-end)
-
-Options.SelectedCollections:OnChanged(function()
-    Config.SelectedCollections = {}
-
-    for i, v in pairs(Options.SelectedCollections.Value) do
-        table.insert(Config.SelectedCollections, i)
     end
     Save()
 end)
