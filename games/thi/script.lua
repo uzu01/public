@@ -26,6 +26,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Player = Players.LocalPlayer
 local IslandInfo = require(ReplicatedStorage.Modules.IslandInfo)
 local PetItems = require(ReplicatedStorage.Modules.PetItems)
+local SpecialEventInfo = require(ReplicatedStorage.Modules.SpecialEventInfo)
 local Shorten = loadstring(game:HttpGet("https://raw.githubusercontent.com/uzu01/public/main/util/shorten.lua"))()
 
 local BlacklistedBlocks = {}
@@ -122,7 +123,9 @@ function GetEggs()
 
     for i, v in pairs(PetItems.Eggs) do
         if v.GemsPrice then
-            table.insert(tbl1, {Name = i, Price = v.GemsPrice})
+            table.insert(tbl1, {Name = i, Price = v.GemsPrice, Curr = " Gems"})
+        elseif v.TurkeyPrice then
+            table.insert(tbl1, {Name = i, Price = v.TurkeyPrice, Curr = " Turk"})
         end
     end
 
@@ -131,7 +134,7 @@ function GetEggs()
     end)
 
     for i, v in pairs(tbl1) do
-        table.insert(tbl2, v.Name .. " | " .. Shorten(v.Price))
+        table.insert(tbl2, v.Name .. " | " .. Shorten(v.Price) .. v.Curr)
     end
 
     return tbl2
@@ -150,6 +153,15 @@ function GetChests()
         for i2, v2 in pairs(v) do
             table.insert(tbl, i2)
         end 
+        table.insert(tbl, "")
+    end
+    
+    for i, v in pairs(SpecialEventInfo.SpecialEvents) do
+        table.insert(tbl, "- " .. i .. " -")
+        table.insert(tbl, "")
+        for i2, v2 in pairs(v.Chests) do
+            table.insert(tbl, i2)
+        end
         table.insert(tbl, "")
     end
     return tbl
