@@ -449,7 +449,9 @@ function AutoBuyIslands()
                 ReplicatedStorage.Events.UIAction:FireServer("UnlockIsland", i)
                 task.wait(1)
 
-                Options.SelectedIsland:SetValue(i)
+                if table.find(GetData("AreasUnlocked"), i) then
+                    Options.SelectedIsland:SetValue(i)
+                end
             end
         end
         Sett.BuyingIsland = false
