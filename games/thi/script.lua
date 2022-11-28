@@ -375,7 +375,7 @@ function AutoRebirth()
         local RebirthArea = GameItems.RebirthInfo.GetRebirthArea(MyRebirths + 1)
         local Area = workspace.AreaItems[RebirthArea.IslandName]:FindFirstChild("Rebirth")
         
-        if MyCoins >= RebirthCost and MyTools["Jackhammer"] and CanDoRebirth then             
+        if MyCoins >= RebirthCost and MyTools["Jackhammer"] and CanDoRebirth and table.find(GetData("AreasUnlocked"), RebirthArea.IslandName) then             
             CanDoRebirth = false    
             
             if Area then
