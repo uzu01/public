@@ -121,6 +121,19 @@ function CanFarm2()
     return true
 end 
 
+function GetMostExpensiveTool(Island)
+    local Tool, Price = nil, 0
+    
+    for i, v in pairs(IslandInfo.UpgradeShopItems[Island].Tools) do
+        if v.CoinsPrice > Price then
+            Price = v.CoinsPrice
+            Tool = i
+        end
+    end
+    return Tool
+end
+
+
 function GetEggs()
     local tbl1, tbl2 = {}, {}
 
@@ -374,8 +387,9 @@ function AutoRebirth()
         local RebirthCost = GameItems.RebirthInfo.GetRebirthCost(MyRebirths)
         local RebirthArea = GameItems.RebirthInfo.GetRebirthArea(MyRebirths)
         local Area = workspace.AreaItems[RebirthArea.IslandName]:FindFirstChild("Rebirth")
-        
-        if MyCoins >= RebirthCost and MyTools["Jackhammer"] and CanDoRebirth and table.find(GetData("AreasUnlocked"), RebirthArea.IslandName) then             
+        local RequiredTool = GetMostExpensiveTool(RebirthArea.IslandName)
+                
+        if MyCoins >= RebirthCost and MyTools[RequiredTool] and CanDoRebirth and table.find(GetData("AreasUnlocked"), RebirthArea.IslandName) then             
             CanDoRebirth = false    
             
             if Area then
