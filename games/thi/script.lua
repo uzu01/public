@@ -36,8 +36,10 @@ local BlacklistedBlocks = {}
 local CanDoRebirth = true
 local CanCount = true
 local CanCount2 = true
+local CanCount3 = true
 local Count = 0
 local Count2 = 0
+local Count3 = 0
 
 local PosTable = {
     ["-X"] = Vector3.new(-1, 0, 0),
@@ -97,6 +99,7 @@ function CanFarm(Block)
         local RaycastParams = RaycastParams.new()
     
         if Min == 0 and Sec < 5 or Config.CanRebirth or Config.CanSell then
+            Teleport(IslandPos[Config.SelectedIsland])
             return false
         end
 
@@ -120,6 +123,13 @@ function CanFarm2()
     end
     return true
 end 
+
+function CanCollect()
+    if Sett.CanSell or Sett.CanRebirth or Sett.BuyingIsland then
+        return false
+    end
+    return true
+end
 
 function GetMostExpensiveTool(Island)
     local Tool, Price = nil, 0
@@ -221,6 +231,17 @@ function GetOre()
     for i, v in pairs(workspace.BlockTerrain[Config.SelectedIsland]:GetChildren()) do
         for i2, v2 in pairs(v:GetChildren()) do
             if table.find(Config.SelectedOres, v2.Name) and CanFarm(v2) then
+                return v2
+            end
+        end
+    end
+    return false
+end
+
+function GetCollection()    
+    for i, v in pairs(workspace.BlockTerrain[Config.SelectedIsland]:GetChildren()) do
+        for i2, v2 in pairs(v:GetChildren()) do
+            if v2.Name == "???" and CanFarm(v2) then
                 return v2
             end
         end
@@ -348,17 +369,37 @@ end
 function AutoCollection()
     while task.wait(.1) and Config.AutoCollection do
         if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            for i, v in pairs(workspace.BlockTerrain[Config.SelectedIsland]:GetChildren()) do
-                for i3, v3 in pairs(v:GetChildren()) do
-                    if v3.Name == "???" and CanFarm(v3) then
-                        Sett.HasCollection = true
-                        Teleport(v3.CFrame)
+            local Collection = GetCollection()
 
-                        task.spawn(function()
-                            ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(v3.Parent.Parent.Name, v3.Position, v3.Position)
-                        end)
-                    end
-                end
+            if Collection and CanFarm(Collection) and CanCollect() then
+                Sett.HasCollection = true
+
+                repeat task.wait()
+                    local Pos = Collection.CFrame
+                    Teleport(Pos)
+
+                    task.spawn(function()
+                        ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
+
+                        if CanCount3 then
+                            CanCount3 = false
+
+                            task.wait(1)
+                            Count3 += 1
+
+                            if Count3 > 9 then	
+                                local Result = ReplicatedStorage.Events.TerrainToolRequest:InvokeServer(Collection.Parent.Parent.Name, Pos.p, Pos.p)
+
+                                if not Result[1] then
+                                    table.insert(BlacklistedBlocks, Collection.CFrame)
+                                end
+                                Count3 = 0
+                            end	
+                            CanCount3 = true
+                        end
+                    end)
+                until not Collection.Parent or not CanFarm(Collection) or not Config.AutoCollection or not CanCollect()
+                Teleport(IslandPos[Config.SelectedIsland])
             end
             Sett.HasCollection = false
         end
