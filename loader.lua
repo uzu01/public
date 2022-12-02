@@ -10,6 +10,7 @@ local GameTable = {
     [10404327868] = "tc",
     [10631384212] = "thi",
     [1659645941] = "i",
+    [11040063484] = "sfs",
 }
 
 local IsSupported = GameTable[game.PlaceId] or GameTable[game.GameId]
