@@ -6,7 +6,7 @@ return function(Number)
 	local Index = math.floor(math.log10(Number))
 	Index = Index - (Index % 3)
 
-	local Suffix = Suffixes[(Index / 3) + 1]
+	local Suffix = Suffixes[(Index / 3) + 1] or ""
 	local NearestMultiple = 10 ^ Index
 	local PrecisionMultiple = 10 ^ 2
 	
